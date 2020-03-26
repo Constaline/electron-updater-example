@@ -1,28 +1,53 @@
 {
   "name": "electron-updater-example",
-  "version": "0.7.1",
+  "version": "0.0.1",
   "main": "main.js",
   "description": "electron-updater example project",
-  "author": "Matt Haggard",
   "scripts": {
-    "publish": "build -p always"
+    "start": "electron .",
+    "build": "electron-builder --"
   },
   "devDependencies": {
-    "electron": "^3.0.2",
-    "electron-builder": "^20.28.4"
+    "electron": "5.0.3",
+    "electron-builder": "21.2.0"
   },
   "dependencies": {
-    "electron-log": "^1.3.0",
-    "electron-updater": "^4.0.6"
+    "electron-log": "1.3.0",
+    "electron-updater": "4.1.2"
   },
   "build": {
-    "appId": "com.github.iffy.electronupdaterexample",
-    "mac": {
-      "category": "your.app.category.type",
-      "target": [
-        "zip",
-        "dmg"
-      ]
+    "productName": "electronupdaterexample",
+    "appId": "com.example.electronupdater",
+    "directories": {
+        "output": "dist"
+    },
+    "files": [
+        "main.js",
+        "version.html"
+    ],
+    "publish": [
+        {
+            "provider": "generic",
+            "url": ""
+        }
+    ],
+    "nsis": {
+        "oneClick": false,
+        "allowToChangeInstallationDirectory": true,
+        "perMachine": true,
+        "runAfterFinish": true,
+        "allowElevation": true,
+        "artifactName": "${name}-${version}.${ext}"
+    },
+    "win": {
+        "target": [
+            {
+                "target": "nsis",
+                "arch": [
+                    "ia32"
+                ]
+            }
+        ]
     }
   }
 }
