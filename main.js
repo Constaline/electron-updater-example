@@ -59,7 +59,12 @@ function sendStatusToWindow(text) {
   win.webContents.send('message', text);
 }
 function createDefaultWindow() {
-  win = new BrowserWindow();
+  win = new BrowserWindow({
+    webPreferences: {
+      webSecurity: false,
+      nodeIntegration: true
+    },
+  });
   win.webContents.openDevTools();
   win.on('closed', () => {
     win = null;
@@ -67,76 +72,62 @@ function createDefaultWindow() {
   win.loadURL(`file://${__dirname}/version.html#v${app.getVersion()}`);
   return win;
 }
+
+/**
+ * autoUpdater
+ */
+// 禁用自动下载，自动下载会与 autoUpdater.downloadUpdate 冲突
+autoUpdater.autoDownload = false;
+// 禁用自动安装，自动安装会与 autoUpdater.quitAndInstall 冲突
+autoUpdater.autoInstallOnAppQuit = false;
+// 检查更新事件
 autoUpdater.on('checking-for-update', () => {
   sendStatusToWindow('Checking for update...');
 })
+// 有更新事件
 autoUpdater.on('update-available', (info) => {
-  sendStatusToWindow('Update available.');
+  console.log('===============update-available', info);
+  sendStatusToWindow('Update available.' + JSON.stringify(info));
+  autoUpdater.downloadUpdate()
 })
+// 没有更新事件
 autoUpdater.on('update-not-available', (info) => {
+  console.log('===============update-not-available', info);
   sendStatusToWindow('Update not available.');
 })
+// 更新出错事件
 autoUpdater.on('error', (err) => {
+  console.log('===============err-in-updater', err);
   sendStatusToWindow('Error in auto-updater. ' + err);
 })
+// 更新进度事件
 autoUpdater.on('download-progress', (progressObj) => {
   let log_message = "Download speed: " + progressObj.bytesPerSecond;
   log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
   log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
   sendStatusToWindow(log_message);
 })
+// 更新下载完成事件
 autoUpdater.on('update-downloaded', (info) => {
-  sendStatusToWindow('Update downloaded');
+  console.log('===============update-downloaded', info);
+  sendStatusToWindow('Update downloaded' + JSON.stringify(info));
+  setTimeout(() => {
+    autoUpdater.quitAndInstall();
+  }, 2000); 
 });
+
+
 app.on('ready', function() {
   // Create the Menu
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 
   createDefaultWindow();
+
+  // 触发检查更新
+  autoUpdater.checkForUpdates()
 });
+
 app.on('window-all-closed', () => {
   app.quit();
 });
-
-//
-// CHOOSE one of the following options for Auto updates
-//
-
-//-------------------------------------------------------------------
-// Auto updates - Option 1 - Simplest version
-//
-// This will immediately download an update, then install when the
-// app quits.
-//-------------------------------------------------------------------
-app.on('ready', function()  {
-  autoUpdater.checkForUpdatesAndNotify();
-});
-
-//-------------------------------------------------------------------
-// Auto updates - Option 2 - More control
-//
-// For details about these events, see the Wiki:
-// https://github.com/electron-userland/electron-builder/wiki/Auto-Update#events
-//
-// The app doesn't need to listen to any events except `update-downloaded`
-//
-// Uncomment any of the below events to listen for them.  Also,
-// look in the previous section to see them being used.
-//-------------------------------------------------------------------
-// app.on('ready', function()  {
-//   autoUpdater.checkForUpdates();
-// });
-// autoUpdater.on('checking-for-update', () => {
-// })
-// autoUpdater.on('update-available', (info) => {
-// })
-// autoUpdater.on('update-not-available', (info) => {
-// })
-// autoUpdater.on('error', (err) => {
-// })
-// autoUpdater.on('download-progress', (progressObj) => {
-// })
-// autoUpdater.on('update-downloaded', (info) => {
-//   autoUpdater.quitAndInstall();  
-// })
